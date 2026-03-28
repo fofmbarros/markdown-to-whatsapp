@@ -72,10 +72,6 @@ console.log(
 - `![alt](url)` -> `alt (url)` by default, or `url` when alt text is empty
 - `<strong>`, `<em>`, `<b>`, and `<i>` tags are stripped
 
-## Contributing
-
-Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
-
 ## License
 
 MIT
