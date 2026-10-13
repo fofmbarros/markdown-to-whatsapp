@@ -3,6 +3,7 @@ node_modules
 .pnp.js
 coverage
 dist
+package.tgz
 out
 build
 .DS_Store

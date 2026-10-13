@@ -7,6 +7,9 @@
 		"url": "https://github.com/fofmbarros/markdown-to-whatsapp/issues"
 	},
 	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/fofmbarros/markdown-to-whatsapp.git"
@@ -30,10 +33,13 @@
 		"build": "bunup",
 		"dev": "bunup --watch",
 		"format": "oxfmt",
+		"format:check": "oxfmt --check .",
 		"lint": "oxlint",
 		"prepare": "bun simple-git-hooks",
+		"prepack": "bun run build",
 		"release": "bumpp --commit --push --tag",
 		"test": "bun test",
+		"test:package": "bun pm pack --filename package.tgz && bun scripts/smoke-package.ts package.tgz",
 		"test:coverage": "bun test --coverage",
 		"test:watch": "bun test --watch",
 		"type-check": "tsc --noEmit"
