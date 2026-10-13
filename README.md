@@ -2,7 +2,7 @@
 
 A lightweight formatter for converting Markdown into WhatsApp-friendly text.
 
-Prepare messages with WhatsApp bold, italic, strikethrough, and monospace formatting. Customize how headings, links, and images appear in the output.
+Prepare messages with WhatsApp lists, block quotes, inline code, bold, italic, strikethrough, and monospace formatting. Customize how headings, links, and images appear in the output.
 
 - No runtime dependencies.
 - Framework-independent, with a synchronous string-in, string-out API.
@@ -32,7 +32,7 @@ yarn add @fofmbarros/markdown-to-whatsapp
 ## Quick start
 
 ```typescript
-import { MarkdownToWhatsAppFormatter } from "@fofmbarros/markdown-to-whatsapp";
+import { MarkdownToWhatsAppFormatter } from '@fofmbarros/markdown-to-whatsapp';
 
 const formatter = new MarkdownToWhatsAppFormatter();
 
@@ -85,19 +85,19 @@ The package exports `MarkdownToWhatsAppFormatter` and the `MarkdownToWhatsAppFor
 ### Custom formatting
 
 ```typescript
-import { MarkdownToWhatsAppFormatter } from "@fofmbarros/markdown-to-whatsapp";
+import { MarkdownToWhatsAppFormatter } from '@fofmbarros/markdown-to-whatsapp';
 
 const formatter = new MarkdownToWhatsAppFormatter({
 	formatH1: (text) => `*${text.toUpperCase()}*`,
 	formatH2: (text) => `_${text}_`,
 	formatH3: (text) => `~${text}~`,
-	formatImage: (url, alt) => `${alt ?? "Image"} -> ${url}`,
+	formatImage: (url, alt) => `${alt ?? 'Image'} -> ${url}`,
 	formatUrl: (url, text) => `${text ?? url} -> ${url}`,
 });
 
 console.log(
 	formatter.format(
-		"# Title\n## Subtitle\n### Section\n[Docs](https://example.com)\n![Logo](https://example.com/logo.png)",
+		'# Title\n## Subtitle\n### Section\n[Docs](https://example.com)\n![Logo](https://example.com/logo.png)',
 	),
 );
 ```
@@ -109,7 +109,11 @@ console.log(
 | `*italic*`                           | `_italic_`                         |
 | `**bold**` or `__bold__`             | `*bold*`                           |
 | `~~strike~~`                         | `~strike~`                         |
-| `` `code` ``                         | ` ```code``` `                     |
+| `- item`, `* item`, or `+ item`      | `- item`                           |
+| `1. item`                            | Preserved                          |
+| `> quote`                            | Preserved                          |
+| `` `code` ``                         | Preserved (inline code)            |
+| Triple-backtick code                 | Preserved (monospace)              |
 | `# Heading` through `###### Heading` | `Heading`                          |
 | `[text](url)`                        | `text (url)`                       |
 | `![alt](url)`                        | `alt (url)`                        |
@@ -117,6 +121,8 @@ console.log(
 | `<strong>`, `<em>`, `<b>`, and `<i>` | Tags removed; inner text retained. |
 
 Only heading levels 1–3 have custom callbacks. Levels 4–6 always become plain text.
+
+Inline code and triple-backtick code blocks are preserved verbatim; their contents are not processed as Markdown.
 
 ## License
 

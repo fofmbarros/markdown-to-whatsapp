@@ -4,27 +4,21 @@ import { MarkdownToWhatsAppFormatter } from '../src';
 const formatter = new MarkdownToWhatsAppFormatter();
 
 test('formats inline markdown styles', () => {
-	expect(
-		formatter.format(
-			'Use *italic*, **bold**, __also bold__, ~~strike~~, and `code`.',
-		),
-	).toBe('Use _italic_, *bold*, *also bold*, ~strike~, and ```code```.');
+	expect(formatter.format('Use *italic*, **bold**, __also bold__, ~~strike~~, and `code`.')).toBe(
+		'Use _italic_, *bold*, *also bold*, ~strike~, and `code`.',
+	);
 });
 
 test('strips heading markers and preserves compatible quote and list syntax', () => {
-	expect(
-		formatter.format('# Title\n## Subtitle\n> quote\n- bullet\n1. numbered'),
-	).toBe('Title\nSubtitle\n> quote\n- bullet\n1. numbered');
+	expect(formatter.format('# Title\n## Subtitle\n> quote\n- bullet\n1. numbered')).toBe(
+		'Title\nSubtitle\n> quote\n- bullet\n1. numbered',
+	);
 });
 
 test('formats images and links', () => {
 	expect(
-		formatter.format(
-			'![Diagram](https://example.com/image.png) and [Docs](https://example.com)',
-		),
-	).toBe(
-		'Diagram (https://example.com/image.png) and Docs (https://example.com)',
-	);
+		formatter.format('![Diagram](https://example.com/image.png) and [Docs](https://example.com)'),
+	).toBe('Diagram (https://example.com/image.png) and Docs (https://example.com)');
 });
 
 test('keeps image URLs when alt text is empty', () => {
@@ -40,9 +34,9 @@ test('uses heading options when provided', () => {
 		formatH3: (heading) => `~${heading}~`,
 	});
 
-	expect(
-		customFormatter.format('# Title\n## Subtitle\n### Tertiary\n#### Plain'),
-	).toBe('*TITLE*\n_ Subtitle _\n~Tertiary~\nPlain');
+	expect(customFormatter.format('# Title\n## Subtitle\n### Tertiary\n#### Plain')).toBe(
+		'*TITLE*\n_ Subtitle _\n~Tertiary~\nPlain',
+	);
 });
 
 test('uses image and link options when provided', () => {
@@ -55,9 +49,7 @@ test('uses image and link options when provided', () => {
 		customFormatter.format(
 			'![Diagram](https://example.com/image.png) and [Docs](https://example.com)',
 		),
-	).toBe(
-		'image:Diagram@https://example.com/image.png and link:Docs@https://example.com',
-	);
+	).toBe('image:Diagram@https://example.com/image.png and link:Docs@https://example.com');
 });
 
 test('passes empty alt text to custom image formatting', () => {
@@ -79,9 +71,7 @@ test('falls back to default formatting for missing options', () => {
 		customFormatter.format(
 			'# Title\n## Subtitle\n![Diagram](https://example.com/image.png)\n[Docs](https://example.com)',
 		),
-	).toBe(
-		'H1:Title\nSubtitle\nDiagram (https://example.com/image.png)\nDocs (https://example.com)',
-	);
+	).toBe('H1:Title\nSubtitle\nDiagram (https://example.com/image.png)\nDocs (https://example.com)');
 });
 
 test('keeps default formatting for headings deeper than h3', () => {
@@ -97,11 +87,9 @@ test('keeps default formatting for headings deeper than h3', () => {
 });
 
 test('removes supported html emphasis tags', () => {
-	expect(
-		formatter.format(
-			'<strong>Bold</strong> <em>italic</em> <b>more</b> <i>text</i>',
-		),
-	).toBe('Bold italic more text');
+	expect(formatter.format('<strong>Bold</strong> <em>italic</em> <b>more</b> <i>text</i>')).toBe(
+		'Bold italic more text',
+	);
 });
 
 test('applies multiple transformations in one string', () => {
@@ -110,7 +98,7 @@ test('applies multiple transformations in one string', () => {
 			'# Release\nRead [guide](https://example.com) and ![Logo](https://example.com/logo.png) with *care* and `snippets`.',
 		),
 	).toBe(
-		'Release\nRead guide (https://example.com) and Logo (https://example.com/logo.png) with _care_ and ```snippets```.',
+		'Release\nRead guide (https://example.com) and Logo (https://example.com/logo.png) with _care_ and `snippets`.',
 	);
 });
 
@@ -128,4 +116,51 @@ test('applies option hooks alongside other markdown transforms', () => {
 	).toBe(
 		'*Release*\nRead guide -> https://example.com and Logo -> https://example.com/logo.png with _care_.',
 	);
+});
+
+test('normalizes Markdown bullet markers while formatting list content', () => {
+	expect(formatter.format('- **one**\n* *two*\n+ ~~three~~\n  * nested')).toBe(
+		'- *one*\n- _two_\n- ~three~\n  - nested',
+	);
+});
+
+test('preserves inline code without transforming its contents', () => {
+	expect(formatter.format('`**bold**` and `[link](url)` with **bold** outside')).toBe(
+		'`**bold**` and `[link](url)` with *bold* outside',
+	);
+});
+
+test('preserves single-line monospace formatting', () => {
+	expect(formatter.format('Before ```**literal**``` and `inline` after')).toBe(
+		'Before ```**literal**``` and `inline` after',
+	);
+});
+
+test('formats emphasis surrounding inline code', () => {
+	expect(formatter.format('**Use `code` here**')).toBe('*Use `code` here*');
+});
+
+test('passes complete headings containing inline code to callbacks', () => {
+	const customFormatter = new MarkdownToWhatsAppFormatter({
+		formatH1: (heading) => `*${heading}*`,
+	});
+	expect(customFormatter.format('# Use `code` here')).toBe('*Use `code` here*');
+});
+
+test('does not confuse input text with protected code markers', () => {
+	expect(formatter.format('\u00000\u0000 **bold** `code`')).toBe('\u00000\u0000 *bold* `code`');
+});
+
+test('protects fenced code blocks from all other transformations', () => {
+	const code =
+		'```\n# Heading\n* bullet\n**bold**\n`inline`\n[link](url)\n<strong>text</strong>\n```';
+	expect(formatter.format(`# Title\n${code}\n**outside**`)).toBe(`Title\n${code}\n*outside*`);
+});
+
+test('supports all eight WhatsApp formatting styles together', () => {
+	expect(
+		formatter.format(
+			'- Bullet\n1. Numbered\n> Quote\n`Inline`\n**Bold**\n*Italic*\n~~Strike~~\n```Monospace```',
+		),
+	).toBe('- Bullet\n1. Numbered\n> Quote\n`Inline`\n*Bold*\n_Italic_\n~Strike~\n```Monospace```');
 });

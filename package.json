@@ -1,6 +1,6 @@
 {
 	"name": "@fofmbarros/markdown-to-whatsapp",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Markdown to WhatsApp proprietary format parser",
 	"homepage": "https://github.com/fofmbarros/markdown-to-whatsapp#readme",
 	"bugs": {

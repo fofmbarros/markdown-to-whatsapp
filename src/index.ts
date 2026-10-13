@@ -27,10 +27,7 @@ export class MarkdownToWhatsAppFormatter {
 	}
 
 	private formatImage(url: string, alt: string): string {
-		return (
-			this.options?.formatImage?.(url, alt) ??
-			(alt.length > 0 ? `${alt} (${url})` : url)
-		);
+		return this.options?.formatImage?.(url, alt) ?? (alt.length > 0 ? `${alt} (${url})` : url);
 	}
 
 	private formatUrl(url: string, text: string): string {
@@ -38,7 +35,24 @@ export class MarkdownToWhatsAppFormatter {
 	}
 
 	format(markdownString: string): string {
+		const code: string[] = [];
+		let marker = '\u0000';
+		while (markdownString.includes(marker)) marker += '\u0000';
+		const protectedMarkdown = markdownString.replaceAll(/```[\s\S]*?```|`[^`\r\n]+`/g, (part) => {
+			const index = code.length;
+			code.push(part);
+			return `${marker}${index}${marker}`;
+		});
+		return this.formatText(protectedMarkdown).replaceAll(
+			new RegExp(`${marker}(\\d+)${marker}`, 'g'),
+			(placeholder, index: string) => code[Number(index)] ?? placeholder,
+		);
+	}
+
+	private formatText(markdownString: string): string {
 		const content = markdownString
+			// Normalize Markdown bullet markers to WhatsApp list syntax
+			.replaceAll(/^([\t ]*)[*+](?=[\t ])/gm, '$1-')
 			// Supported HTML emphasis tags
 			.replaceAll(/<\/?(?:strong|em|b|i)>/g, '')
 			// Italic
@@ -48,8 +62,6 @@ export class MarkdownToWhatsAppFormatter {
 			.replaceAll(/__(.*?)__/g, '*$1*')
 			// Strikethrough
 			.replaceAll(/~~(.*?)~~/g, '~$1~')
-			// Inline code
-			.replaceAll(/`([^`]+)`/g, '```$1```')
 			// Headings
 			.replaceAll(/^(#{1,6})\s+(.*)$/gm, (_, hashes: string, heading: string) =>
 				this.formatHeading(hashes.length, heading),
@@ -59,9 +71,8 @@ export class MarkdownToWhatsAppFormatter {
 				this.formatImage(url, alt),
 			)
 			// Links
-			.replaceAll(
-				/(?<!!)\[([^\]]+)\]\(([^)]+)\)/g,
-				(_, text: string, url: string) => this.formatUrl(url, text),
+			.replaceAll(/(?<!!)\[([^\]]+)\]\(([^)]+)\)/g, (_, text: string, url: string) =>
+				this.formatUrl(url, text),
 			);
 
 		return content;
